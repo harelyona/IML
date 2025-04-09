@@ -50,12 +50,17 @@ class LinearRegression:
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
+        X = self.intercept_adaption(X)
+        pseudo_inverse = np.linalg.pinv(X)
+        self.coefs_ = pseudo_inverse @ y
+        self.fitted_ = True
+
+    def intercept_adaption(self, X):
         n = X.shape[0]
         if self.include_intercept:
             intercept = np.ones((n, 1))
             X = np.hstack((intercept, X))
-        pseudo_inverse = np.linalg.pinv(X)
-        self.coefs_ = pseudo_inverse @ y
+        return X
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -71,7 +76,11 @@ class LinearRegression:
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        pass
+        if not self.fitted_:
+            raise RuntimeError("Linear Regression model hasn't been fitted yet")
+        X = self.intercept_adaption(X)
+        return X @ self.coefs_
+
 
     def loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -90,4 +99,5 @@ class LinearRegression:
         loss : float
             Performance under MSE loss function
         """
-        pass
+        res = self.predict(X)
+        return np.sum((y - res)**2)/y.shape[0]
