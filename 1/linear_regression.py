@@ -32,7 +32,7 @@ class LinearRegression:
             Should fitted model include an intercept or not
         """
         self.include_intercept:bool = include_intercept
-        self.coe:Optional[np.ndarray] = None
+        self.coefs_:Optional[np.ndarray] = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -50,7 +50,12 @@ class LinearRegression:
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
-        pass
+        n = X.shape[0]
+        if self.include_intercept:
+            intercept = np.ones((n, 1))
+            X = np.hstack((intercept, X))
+        pseudo_inverse = np.linalg.pinv(X)
+        self.coefs_ = pseudo_inverse @ y
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
