@@ -1,6 +1,6 @@
 
 import numpy as np
-from typing import NoReturn
+from typing import NoReturn, Optional
 
 
 class LinearRegression:
@@ -31,7 +31,8 @@ class LinearRegression:
         include_intercept: bool, default=True
             Should fitted model include an intercept or not
         """
-        pass
+        self.include_intercept:bool = include_intercept
+        self.coe:Optional[np.ndarray] = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
