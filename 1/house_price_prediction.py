@@ -1,8 +1,10 @@
+from typing import NoReturn
 
-
+import numpy as np
 import pandas as pd
+import random
 
-
+random.seed(1)
 def preprocess_train(X: pd.DataFrame, y: pd.Series):
     """
     preprocess training data.
@@ -59,7 +61,11 @@ if __name__ == '__main__':
     X, y = df.drop("price", axis=1), df.price
 
     # Question 2 - split train test
-
+    m, n = df.shape
+    number_of_test_sampels = int(m*0.25)
+    test_start = random.randint(0, int(m*0.75))
+    test_sample = df.iloc[test_start:test_start + number_of_test_sampels] #TODO test this output
+    print(test_sample)
     # Question 3 - preprocessing of housing prices train dataset
 
     # Question 4 - Feature evaluation of train dataset with respect to response
