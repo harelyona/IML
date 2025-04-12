@@ -3,7 +3,7 @@ from typing import NoReturn
 import numpy as np
 import pandas as pd
 import random
-
+import statistics
 random.seed(1)
 def preprocess_train(X: pd.DataFrame, y: pd.Series):
     """
@@ -69,9 +69,21 @@ if __name__ == '__main__':
     # Question 3 - preprocessing of housing prices train dataset
 
     # Question 4 - Feature evaluation of train dataset with respect to response
+    def feature_evaluation(X: pd.DataFrame, response: pd.Series) -> pd.Series:
+        pearson_correlations = {}
 
+        response_std = statistics.stdev(response)
+
+        for col in X.columns:
+            feature = X[col]
+            feature_std = statistics.stdev(feature)
+            cov = np.mean((feature - feature.mean()) * (response - response.mean()))
+
+            pearson = cov / (feature_std * response_std)
+            pearson_correlations[col] = pearson
+        return pd.Series(pearson_correlations)
     # Question 5 - preprocess the test data
-
+    print(feature_evaluation(X, y))
     # Question 6 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
     #   1) Sample p% of the overall training data
