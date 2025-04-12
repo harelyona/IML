@@ -66,19 +66,19 @@ if __name__ == '__main__':
     test_start = random.randint(0, int(m - number_of_test_sampels))
     test_sample = df.iloc[test_start:test_start + number_of_test_sampels]
     X = df.drop(test_sample.index)
+    y = y.drop(test_sample.index)
     # Question 3 - preprocessing of housing prices train dataset
 
     # Question 4 - Feature evaluation of train dataset with respect to response
     def feature_evaluation(X: pd.DataFrame, response: pd.Series) -> pd.Series:
         pearson_correlations = {}
-
-        response_std = statistics.stdev(response)
-
+        response_std = response.std()
         for col in X.columns:
             feature = X[col]
-            feature_std = statistics.stdev(feature)
-            cov = statistics.covariance(feature, response_std)
-
+            if col == "date":
+                continue
+            feature_std = feature.std()
+            cov = statistics.covariance(feature.tolist(), response.tolist())
             pearson = cov / (feature_std * response_std)
             pearson_correlations[col] = pearson
         return pd.Series(pearson_correlations)
