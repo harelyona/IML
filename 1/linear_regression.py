@@ -1,4 +1,3 @@
-
 import numpy as np
 from typing import NoReturn, Optional
 
@@ -31,8 +30,8 @@ class LinearRegression:
         include_intercept: bool, default=True
             Should fitted model include an intercept or not
         """
-        self.include_intercept:bool = include_intercept
-        self.coefs_:Optional[np.ndarray] = None
+        self.include_intercept: bool = include_intercept
+        self.coefs_: Optional[np.ndarray] = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -100,4 +99,5 @@ class LinearRegression:
             Performance under MSE loss function
         """
         res = self.predict(X)
-        return np.sum((y - res)**2)/y.shape[0]
+        return np.sum((y - res) ** 2) / y.shape[0]
+
