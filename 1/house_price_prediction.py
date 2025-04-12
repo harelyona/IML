@@ -77,7 +77,7 @@ if __name__ == '__main__':
         for col in X.columns:
             feature = X[col]
             feature_std = statistics.stdev(feature)
-            cov = np.mean((feature - feature.mean()) * (response - response.mean()))
+            cov = statistics.covariance(feature, response_std)
 
             pearson = cov / (feature_std * response_std)
             pearson_correlations[col] = pearson
