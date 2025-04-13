@@ -16,6 +16,7 @@ class PolynomialFitting(LinearRegression):
         k : int
             Degree of polynomial to fit
         """
+
         pass
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
