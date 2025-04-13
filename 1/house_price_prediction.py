@@ -6,7 +6,8 @@ import random
 import matplotlib.pyplot as plt
 
 random.seed(1)
-
+ERROR_BAR_COLOR = "red"
+CAP_SIZE = 6
 
 def id_and_dates(X):
     """drop ids and split dates"""
@@ -34,27 +35,31 @@ def preprocess_train(X: pd.DataFrame, y: pd.Series):
     -------
     A clean, preprocessed version of the data
     """
-    idx_to_drop = []
-    for idx in X.index:
-        time_built = pd.to_datetime(X["yr_built"][idx])
-        if time_built > pd.to_datetime(X["yr_renovated"][idx]) or time_built > pd.to_datetime(X["date"][idx]):
-            idx_to_drop.append(idx)
-    X.drop(idx_to_drop, inplace=True)
-    y.drop(idx_to_drop, inplace=True)
-    X = id_and_dates(X)
-
-    # Get rid of nan samples
-    nan_indices_X = X.isna().any(axis=1)
-    nan_indices_y = y.isna()
-    combined_nan_indices = nan_indices_X | nan_indices_y
-
-    # Convert all elements to numeric values
-    for col in X.columns:
-        X[col] = pd.to_numeric(X[col],errors="raise")
-    y = pd.to_numeric(y, errors="raise")
-    X, y = X[~combined_nan_indices], y[~combined_nan_indices]
-
-    return X, y
+    X_processed = X.copy()
+    y_processed = y.copy()
+    X_processed['date'] = pd.to_datetime(X_processed['date'], errors='coerce')
+    X_processed['yr_built_dt'] = pd.to_datetime(X_processed['yr_built'], format='%Y', errors='coerce')
+    renovated_dt = pd.to_datetime(X_processed['yr_renovated'], format='%Y', errors='coerce')
+    renovated_dt[X_processed['yr_renovated'].isin([0, pd.NA, None]) | renovated_dt.isna()] = pd.NaT
+    X_processed['yr_renovated_dt'] = renovated_dt
+    cond1 = ~X_processed['yr_renovated_dt'].isna() & (X_processed['yr_built_dt'] > X_processed['yr_renovated_dt'])
+    cond2 = ~X_processed['date'].isna() & (
+                X_processed['yr_built_dt'] > X_processed['date'])  # Added check for valid date
+    invalid_date_logic_mask = cond1 | cond2 | X_processed['yr_built_dt'].isna() | X_processed['date'].isna()
+    mask_to_keep = ~invalid_date_logic_mask
+    X_processed = X_processed.loc[mask_to_keep]
+    y_processed = y_processed.loc[mask_to_keep]
+    X_processed = X_processed.drop(columns=['yr_built_dt', 'yr_renovated_dt'], errors='ignore')
+    X_processed = id_and_dates(X_processed)
+    for col in X_processed.columns:
+        X_processed[col] = pd.to_numeric(X_processed[col], errors='coerce')
+    y_processed = pd.to_numeric(y_processed, errors='coerce')
+    nan_mask_X = X_processed.isna().any(axis=1)
+    nan_mask_y = y_processed.isna()
+    combined_nan_mask = nan_mask_X | nan_mask_y
+    X_final = X_processed.loc[~combined_nan_mask]
+    y_final = y_processed.loc[~combined_nan_mask]
+    return X_final, y_final
 
 
 def preprocess_test(X: pd.DataFrame):
@@ -155,7 +160,7 @@ if __name__ == '__main__':
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
     test_samples = preprocess_test(test_sample)
     test_samples = test_samples.astype(np.float64)
-    percentages = range(10, 15)
+    percentages = range(10, 101)
     mean_loss = []
     std_loss = []
     for p in percentages:
@@ -163,15 +168,10 @@ if __name__ == '__main__':
         losses = []
         for _ in range(10):
             number_of_samples = int(training_data_size * p / 100)
-            print(1)
             pre_processed_X = training_samples.sample(number_of_samples)
-            print(2)
             y = response[pre_processed_X.index]
-            print(3)
             X, y = preprocess_train(pre_processed_X, y)
-            print(4)
             X = X.astype(np.float64)
-
             y = y.astype(np.float64)
             X = X.to_numpy()
             y = y.to_numpy()
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         std_loss.append(np.std(losses))
     plt.xlabel("training sample percentage")
     plt.ylabel("loss")
-    plt.errorbar(percentages, mean_loss, yerr=std_loss, label="mean loss", fmt='o')
+    plt.errorbar(percentages, mean_loss, yerr=std_loss, label="mean loss", fmt='o', ecolor=ERROR_BAR_COLOR, capsize=CAP_SIZE)
     plt.savefig(output_path + os.sep + "mean_loss.png", format="png")
     plt.show()
 
