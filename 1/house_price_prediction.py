@@ -1,5 +1,4 @@
 import os
-from typing import NoReturn, Tuple
 from linear_regression import *
 import numpy as np
 import pandas as pd
@@ -15,13 +14,10 @@ def id_and_dates(X):
     # the condition  "id" in X.columns is True
     if "id" in X.columns:
         X = X.drop("id", axis=1)  # So why this line fails with KeyError: "['id'] not found in axis"????
-    # Split date into year and month features
+    # Replace date with days counter from May 1st 2014
     if "date" in X.columns:
-        dates = X["date"]
-        X["year"] = dates.str[:4].astype("Int64")
-        X["month"] = dates.str[4:6].astype("Int64")
-        X["day"] = dates.str[6:8].astype("Int64")
-        X = X.drop("date", axis=1)
+        X["days since May 1st 2014"] = (pd.to_datetime(X["date"]) - pd.Timestamp("2014-05-01")).dt.days
+        X.drop('date', axis=1, inplace=True)
     return X
 
 
@@ -38,7 +34,15 @@ def preprocess_train(X: pd.DataFrame, y: pd.Series):
     -------
     A clean, preprocessed version of the data
     """
+    idx_to_drop = []
+    for idx in X.index:
+        time_built = pd.to_datetime(X["yr_built"][idx])
+        if time_built > pd.to_datetime(X["yr_renovated"][idx]) or time_built > pd.to_datetime(X["date"][idx]):
+            idx_to_drop.append(idx)
+    X.drop(idx_to_drop, inplace=True)
+    y.drop(idx_to_drop, inplace=True)
     X = id_and_dates(X)
+
     # Get rid of nan samples
     nan_indices_X = X.isna().any(axis=1)
     nan_indices_y = y.isna()
@@ -65,6 +69,15 @@ def preprocess_test(X: pd.DataFrame):
     -------
     A preprocessed version of the test data that matches the coefficients format.
     """
+    for idx in X.index:
+        time_built = pd.to_datetime(X["yr_built"][idx])
+        if time_built > pd.to_datetime(X["yr_renovated"][idx]):
+            X["yr_built"][idx] = X[["yr_built"]].mean()
+            X["yr_renovated"][idx] = X[["yr_renovated"]].mean()
+        elif time_built > pd.to_datetime(X["date"][idx]):
+            X["yr_built"][idx] = X[["yr_built"]].mean()
+            X["date"] = X[["date"]].mean()
+
     X = id_and_dates(X)
     # Replace every nan element to the mean value of its column
     for feature in X:
@@ -133,7 +146,6 @@ if __name__ == '__main__':
     test_response = y.iloc[test_start:test_start + test_data_size]
     training_samples = df.drop(test_sample.index)
     response = y.drop(test_sample.index)
-
     # Question 6 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
     #   1) Sample p% of the overall training data
@@ -143,16 +155,40 @@ if __name__ == '__main__':
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
     test_samples = preprocess_test(test_sample)
     test_samples = test_samples.astype(np.float64)
-    for p in range(10, 101):
-        number_of_samples = int(training_data_size * p / 100)
-        pre_processed_X = training_samples.sample(number_of_samples)
-        y = response[pre_processed_X.index]
-        X, y = preprocess_train(pre_processed_X, y)
-        X = X.astype(np.float64)
-        y = y.astype(np.float64)
-        X = X.to_numpy()
-        y = y.to_numpy()
-        fit = LinearRegression(True)
-        fit.fit(X, y)
+    percentages = range(10, 15)
+    mean_loss = []
+    std_loss = []
+    for p in percentages:
+        print(p)
+        losses = []
+        for _ in range(10):
+            number_of_samples = int(training_data_size * p / 100)
+            print(1)
+            pre_processed_X = training_samples.sample(number_of_samples)
+            print(2)
+            y = response[pre_processed_X.index]
+            print(3)
+            X, y = preprocess_train(pre_processed_X, y)
+            print(4)
+            X = X.astype(np.float64)
+
+            y = y.astype(np.float64)
+            X = X.to_numpy()
+            y = y.to_numpy()
+            fit = LinearRegression(True)
+            fit.fit(X, y)
+            losses.append(fit.loss(test_samples, test_response))
+        mean_loss.append(np.mean(losses))
+        std_loss.append(np.std(losses))
+    plt.xlabel("training sample percentage")
+    plt.ylabel("loss")
+    plt.errorbar(percentages, mean_loss, yerr=std_loss, label="mean loss", fmt='o')
+    plt.savefig(output_path + os.sep + "mean_loss.png", format="png")
+    plt.show()
+
+
+
+
+
 
 
