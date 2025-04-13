@@ -72,11 +72,29 @@ if __name__ == '__main__':
     y = y.drop(test_sample.index)
 
     # Question 3 - preprocessing of housing prices train dataset TODO complete this
-    def preprocess_data(X: pd.DataFrame, y: pd.Series)->Tuple[pd.Series, pd.Series]:
+    def preprocess_data(X: pd.DataFrame, y: pd.Series)->Tuple[pd.DataFrame, pd.Series]:
+        X = id_and_dates(X)
         nan_indices_X = X.isna().any(axis=1)
         nan_indices_y = y.isna()
         combined_nan_indices = nan_indices_X | nan_indices_y
         return X[~combined_nan_indices], y[~combined_nan_indices]
+
+
+    def id_and_dates(X):
+        """drop ids and split dates"""
+        # Id is an irrelevant feature
+        # the condition  "id" in X.columns is True
+        if "id" in X.columns:
+            X = X.drop("id", axis=1)  # So why this line fails with KeyError: "['id'] not found in axis"????
+        # Split date into year and month features
+        if "date" in X.columns:
+            dates = X["date"]
+            X["year"] = dates.str[:4].astype("Int64")
+            X["month"] = dates.str[4:6].astype("Int64")
+            X["day"] = dates.str[6:8].astype("Int64")
+            X = X.drop("date", axis=1)
+        return X
+
 
     # Question 4 - Feature evaluation of train dataset with respect to response
     def feature_evaluation(X: pd.DataFrame, response: pd.Series) -> pd.Series:
@@ -85,11 +103,8 @@ if __name__ == '__main__':
         response_std = response.std()
         for col in X.columns:
             feature = X[col]
-            if col == "date": #TODO complete this
-                continue
-
             feature_std = feature.std()
-            cov = np.cov(feature, response)[0, 1]
+            cov = np.cov(feature, response)[0][1]
 
             # Check for zero standard deviation to avoid division by zero
             if feature_std > 0 and response_std > 0:
@@ -103,19 +118,24 @@ if __name__ == '__main__':
             plt.scatter(feature, response)
             plt.xlabel(col)
             plt.ylabel("price")
-
             plt.savefig(f"{col}.png", format="png")
-            plt.show()
         return pd.Series(pearson_correlations)
 
     # Question 5 - preprocess the test data
     def preprocess_test_data(X:pd.DataFrame):
+        X = id_and_dates(X)
         # Replace every nan element to the mean value of its column
+        X = X.drop("id", axis=1)
         for feature in X:
+            if feature == "date":
+                continue
             mean = X[feature].mean()
             X[feature] = X[feature].fillna(mean)
 
 
+    print(feature_evaluation(X, y))
+    preprocess_test(test_sample)
+    #preprocess_test_data(test_sample)
     # Question 6 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
     #   1) Sample p% of the overall training data
