@@ -19,6 +19,8 @@ def load_data(filename: str) -> pd.DataFrame:
     data_frame = pd.read_csv(filename, parse_dates=['Date'])
     data_frame = data_frame.dropna()
     data_frame['DayOfYear'] = data_frame['Date'].dt.dayofyear
+    # Filter out rows with extreme temperature values
+    data_frame = data_frame[(data_frame['Temp'] >= -50) & (data_frame['Temp'] <= 50)]
     return data_frame
 
 
@@ -46,6 +48,22 @@ def plot_std_vs_month(data_frame, path: str = ".") -> None:
     plt.savefig(f"{path}{os.sep}month_stds.png")
 
 
+def plot_mean_vs_month(data_frame, path: str = ".") -> None:
+    temps = data_frame.groupby(['Month', "Country"])['Temp'].agg(["mean", "std"])
+    for country in data_frame['Country'].unique():
+        country_data = temps.loc[temps.index.get_level_values('Country') == country]
+        months = country_data.index.get_level_values('Month')
+        means = country_data['mean'].values
+        stds = country_data['std'].values
+        plt.errorbar(months, means, yerr=stds, fmt='o', label=country)
+    plt.xlabel("Month")
+    plt.ylabel("Mean Temperature")
+    plt.title("Mean Temperatures with Standard Deviation by Month and Country")
+    plt.legend(title="Country")
+    plt.savefig(f"{path}{os.sep}means_vs_month.png")
+    plt.show()
+
+
 if __name__ == '__main__':
     # Question 2 - Load and preprocessing of city temperature dataset
     df = load_data("city_temperature.csv")
@@ -53,13 +71,15 @@ if __name__ == '__main__':
     # Question 3 - Exploring data for specific country
 
     il_temp = df[df['Country'] == 'Israel']
-    plot_temp_vs_day_of_year(il_temp, path=output_path)
+    plot_temp_vs_day_of_year(il_temp, output_path)
     plt.clf()
     plot_std_vs_month(il_temp, output_path)
     plt.clf()
     # Question 4 - Exploring differences between countries
-
+    plot_mean_vs_month(df, output_path)
+    plt.clf()
     # Question 5 - Fitting model for different values of `k`
+    training_samples, training_response, test_samples, test_response = generate_sets_and_responses(il_temp)
 
     # Question 6 - Evaluating fitted model on different countries
     pass

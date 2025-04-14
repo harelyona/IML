@@ -1,4 +1,6 @@
 import os
+from typing import Tuple
+
 from linear_regression import *
 import numpy as np
 import pandas as pd
@@ -133,20 +135,25 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     return pd.Series(pearson_correlations)
 
 
+def generate_sets_and_responses(data_frame: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    m, n = data_frame.shape
+    test_data_size = int(m * 0.25)
+    test_start = random.randint(0, int(m - test_data_size))
+    test_samples = data_frame.iloc[test_start:test_start + test_data_size]
+    test_response = y.iloc[test_start:test_start + test_data_size]
+    training_samples = data_frame.drop(test_samples.index)
+    training_response = y.drop(test_samples.index)
+    return training_samples, training_response, test_samples, test_response
+
+
 if __name__ == '__main__':
     df = pd.read_csv("house_prices.csv")
     df, y = df.drop("price", axis=1), df.price
     output_path = "plots"
-
-    # Question 2 - split train test
     m, n = df.shape
-    test_data_size = int(m * 0.25)
-    training_data_size = m - test_data_size
-    test_start = random.randint(0, int(m - test_data_size))
-    test_sample = df.iloc[test_start:test_start + test_data_size]
-    test_response = y.iloc[test_start:test_start + test_data_size]
-    training_samples = df.drop(test_sample.index)
-    response = y.drop(test_sample.index)
+    # Question 2 - split train test
+    training_samples, response, test_samples, test_response = generate_sets_and_responses(df)
+    training_data_size = m - test_samples.shape[0]
 
     # Question 6 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -155,13 +162,12 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
-    test_samples = preprocess_test(test_sample)
+    test_samples = preprocess_test(test_samples)
     test_samples = test_samples.astype(np.float64)
     percentages = range(10, 101)
     mean_loss = []
     std_loss = []
     for p in percentages:
-        print(p)
         losses = []
         for _ in range(10):
             number_of_samples = int(training_data_size * p / 100)
