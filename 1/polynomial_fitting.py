@@ -8,6 +8,7 @@ class PolynomialFitting(LinearRegression):
     Polynomial Fitting using Least Squares estimation
     """
     def __init__(self, k: int):
+
         """
         Instantiate a polynomial fitting estimator
 
@@ -16,8 +17,7 @@ class PolynomialFitting(LinearRegression):
         k : int
             Degree of polynomial to fit
         """
-
-        pass
+        super().__init__()
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -31,7 +31,7 @@ class PolynomialFitting(LinearRegression):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        pass
+        X = self.intercept_adaption(X)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -82,3 +82,5 @@ class PolynomialFitting(LinearRegression):
             Vandermonde matrix of given samples up to degree k
         """
         pass
+p = PolynomialFitting(3)
+print(p.coefs_)
