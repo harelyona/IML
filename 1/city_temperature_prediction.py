@@ -44,7 +44,7 @@ def plot_std_vs_month(data_frame, path: str = ".") -> None:
     month_stds = data_frame.groupby('Month')['Temp'].agg("std")
     months = month_stds.index
     stds = month_stds.values
-    plt.scatter(months, stds)
+    plt.bar(months, stds)
     plt.xlabel("month")
     plt.ylabel("standard deviation")
     plt.title("std of temperatures vs month")
@@ -53,12 +53,16 @@ def plot_std_vs_month(data_frame, path: str = ".") -> None:
 
 def plot_mean_vs_month(data_frame, path: str = ".") -> None:
     temps = data_frame.groupby(['Month', "Country"])['Temp'].agg(["mean", "std"])
+    colors = ['red', 'blue', 'green', 'orange']
+    i = 0
     for country in data_frame['Country'].unique():
         country_data = temps.loc[temps.index.get_level_values('Country') == country]
         months = country_data.index.get_level_values('Month')
         means = country_data['mean'].values
         stds = country_data['std'].values
-        plt.errorbar(months, means, yerr=stds, fmt='o', label=country)
+        plt.errorbar(months, means, yerr=stds, fmt='o', label=country,color=colors[i])
+        plt.plot(months, means, color=colors[i])
+        i = i + 1
     plt.xlabel("Month")
     plt.ylabel("Mean Temperature")
     plt.title("Mean Temperatures with Standard Deviation by Month and Country")
@@ -75,7 +79,7 @@ def plot_loss_vs_k(samples, responses, output_path: str = ".") -> PolynomialFitt
     for k in ks:
         polyfit = PolynomialFitting(k)
         polyfit.fit(training_samples, training_response)
-        loss = polyfit.loss(test_samples, test_response)
+        loss = round(polyfit.loss(test_samples, test_response), 2)
         print(f"Loss for k={k}: {loss}")
         losses.append(loss)
         if k == 4:
@@ -123,7 +127,7 @@ if __name__ == '__main__':
     feature = "DayOfYear"
     y = il_temp['Temp']
     data5 = il_temp[feature].to_frame()
-    fit = plot_loss_vs_k(data5, y, feature)
+    fit = plot_loss_vs_k(data5, y, output_path)
     plt.show()
     plt.clf()
     # Question 6 - Evaluating fitted model on different countries
