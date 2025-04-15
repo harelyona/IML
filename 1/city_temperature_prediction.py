@@ -2,6 +2,7 @@ from house_price_prediction import *
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import xlabel, ylabel
+from polynomial_fitting import *
 
 
 def load_data(filename: str) -> pd.DataFrame:
@@ -61,25 +62,70 @@ def plot_mean_vs_month(data_frame, path: str = ".") -> None:
     plt.title("Mean Temperatures with Standard Deviation by Month and Country")
     plt.legend(title="Country")
     plt.savefig(f"{path}{os.sep}means_vs_month.png")
-    plt.show()
+
+
+def plot_loss_vs_k(samples, responses, output_path: str = ".") -> PolynomialFitting:
+    training_samples, training_response, test_samples, test_response = generate_sets_and_responses(samples, responses)
+    training_samples, training_response, test_samples, test_response = training_samples.to_numpy().flatten(), training_response.to_numpy(), test_samples.to_numpy().flatten(), test_response.to_numpy()
+    ks = range(1, 11)
+    losses = []
+    k4fit = None
+    for k in ks:
+        polyfit = PolynomialFitting(k)
+        polyfit.fit(training_samples, training_response)
+        loss = polyfit.loss(test_samples, test_response)
+        print(f"Loss for k={k}: {loss}")
+        losses.append(loss)
+        if k == 4:
+            k4fit = polyfit
+    plt.bar(ks, losses)
+    plt.xlabel("polynomial degree")
+    plt.ylabel("loss")
+    plt.title("Loss vs polynomial degree")
+    plt.savefig(f"{output_path}loss vs polynomial degree.png")
+    return k4fit
+
+
+def loss_per_country(data, feature):
+    countries = data['Country'].unique().tolist()
+    countries.remove('Israel')
+    losses = []
+    for country in countries:
+        county_data = data[data['Country'] == country]
+        loss = fit.loss(county_data[feature], county_data['Temp'])
+        losses.append(loss)
+    plt.bar(countries, losses)
+    plt.xlabel("country")
+    plt.ylabel("loss")
+    plt.title("loss for different countries")
+    plt.savefig(f"{output_path}{os.sep}loss for different countries.png")
 
 
 if __name__ == '__main__':
     # Question 2 - Load and preprocessing of city temperature dataset
     df = load_data("city_temperature.csv")
     output_path = "plots"
-    # Question 3 - Exploring data for specific country
 
+    # Question 3 - Exploring data for specific country
     il_temp = df[df['Country'] == 'Israel']
     plot_temp_vs_day_of_year(il_temp, output_path)
     plt.clf()
     plot_std_vs_month(il_temp, output_path)
     plt.clf()
+
     # Question 4 - Exploring differences between countries
     plot_mean_vs_month(df, output_path)
     plt.clf()
-    # Question 5 - Fitting model for different values of `k`
-    training_samples, training_response, test_samples, test_response = generate_sets_and_responses(il_temp)
 
+    # Question 5 - Fitting model for different values of `k`
+    feature = "DayOfYear"
+    y = il_temp['Temp']
+    data5 = il_temp[feature].to_frame()
+    fit = plot_loss_vs_k(data5, y, feature)
+    plt.show()
+    plt.clf()
     # Question 6 - Evaluating fitted model on different countries
-    pass
+
+    loss_per_country(df, feature)
+    plt.show()
+

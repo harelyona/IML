@@ -135,14 +135,14 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     return pd.Series(pearson_correlations)
 
 
-def generate_sets_and_responses(data_frame: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+def generate_sets_and_responses(data_frame: pd.DataFrame, y_data:pd.Series) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     m, n = data_frame.shape
     test_data_size = int(m * 0.25)
     test_start = random.randint(0, int(m - test_data_size))
     test_samples = data_frame.iloc[test_start:test_start + test_data_size]
-    test_response = y.iloc[test_start:test_start + test_data_size]
+    test_response = y_data.iloc[test_start:test_start + test_data_size]
     training_samples = data_frame.drop(test_samples.index)
-    training_response = y.drop(test_samples.index)
+    training_response = y_data.drop(test_samples.index)
     return training_samples, training_response, test_samples, test_response
 
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     output_path = "plots"
     m, n = df.shape
     # Question 2 - split train test
-    training_samples, response, test_samples, test_response = generate_sets_and_responses(df)
+    training_samples, response, test_samples, test_response = generate_sets_and_responses(df, y)
     training_data_size = m - test_samples.shape[0]
     print(feature_evaluation(training_samples, response, output_path))
     # Question 6 - Fit model over increasing percentages of the overall training data
