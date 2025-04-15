@@ -1,3 +1,5 @@
+import os
+
 from house_price_prediction import *
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -82,7 +84,7 @@ def plot_loss_vs_k(samples, responses, output_path: str = ".") -> PolynomialFitt
     plt.xlabel("polynomial degree")
     plt.ylabel("loss")
     plt.title("Loss vs polynomial degree")
-    plt.savefig(f"{output_path}loss vs polynomial degree.png")
+    plt.savefig(f"{output_path}{os.sep}loss vs polynomial degree.png")
     return k4fit
 
 
@@ -125,7 +127,5 @@ if __name__ == '__main__':
     plt.show()
     plt.clf()
     # Question 6 - Evaluating fitted model on different countries
-
     loss_per_country(df, feature)
-    plt.show()
 
