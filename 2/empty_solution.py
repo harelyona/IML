@@ -9,6 +9,7 @@ from sklearn.datasets import make_moons
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import numpy as np
+import matplotlib.lines as mlines
 
 number_of_samples = [5, 10, 20, 100]
 regularizations = [0.1, 1, 5, 10, 100]
@@ -60,32 +61,33 @@ def pratical_1_runner(save_path=None):
             svm_model.fit(X, y)
 
             # Plot samples
-            sub_fig.scatter(X[y==1, 0], X[y==1, 1], label='True samples', s=SCATTER_SIZE)
-            sub_fig.scatter(X[y==-1, 0], X[y==-1, 1], label='False samples', s=SCATTER_SIZE)
+            sub_fig.scatter(X[y == 1, 0], X[y == 1, 1], label='True samples', s=SCATTER_SIZE)
+            sub_fig.scatter(X[y == -1, 0], X[y == -1, 1], label='False samples', s=SCATTER_SIZE)
 
             # Plot decision boundaries
-            x1_min, x1_max = min(X[:, 0]) - 1, max(X[:, 0]) + 1
-            x2_min, x2_max = min(X[:, 1]) - 1, max(X[:, 1]) + 1
+            padding = 1.0
+            x1_min, x1_max = min(X[:, 0]) - padding, max(X[:, 0]) + padding
+            x2_min, x2_max = min(X[:, 1]) - padding, max(X[:, 1]) + padding
             x1_range = np.linspace(x1_min, x1_max, 999)
             sub_fig.plot(x1_range, x1_range * 1.5, color='black', linestyle='--', label='decision boundary')
 
+            # Subfig config first (before SVM plotting)
+            plt.xlim(x1_min, x1_max)
+            plt.ylim(x2_min, x2_max)
+
             # Plot SVM decision boundary
-            x1_range = np.linspace(x1_min, x1_max, 999)
             x2_range = np.linspace(x2_min, x2_max, 999)
             xx, yy = np.meshgrid(x1_range, x2_range)
             grid = np.c_[xx.ravel(), yy.ravel()]
             Z_svm = svm_model.decision_function(grid)
             Z_svm = Z_svm.reshape(xx.shape)
-            sub_fig.contour(xx, yy, Z_svm, levels=[0], colors='red', linewidths=2,)
 
-            # Subfig config
-            plt.xlim(x1_min, x1_max)
-            plt.ylim(x2_min, x2_max)
-            sub_fig.set_title(f"SVM on m={m}, C={C}")
-            sub_fig.set_xlabel('x₁')
-            sub_fig.set_ylabel('x₂')
-            sub_fig.legend(loc='upper left')
-            sub_fig.grid(True)
+            # Create proxy artist for SVM boundary
+            proxy_svm = mlines.Line2D([], [], color='red', linewidth=2, label='SVM decision boundary')
+            sub_fig.contour(xx, yy, Z_svm, levels=[0], colors='red', linewidths=2)
+
+            # Add all elements to legend including proxy_svm
+            sub_fig.legend(loc='upper left', handles=[*sub_fig.get_legend_handles_labels()[0], proxy_svm])
 
 
     plt.tight_layout()
