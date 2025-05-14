@@ -93,5 +93,5 @@ def practical_2_runner(save_path=None):
 
 if __name__ == "__main__":
     path = '.'
-    pratical_1_runner(save_path=None)
+    pratical_1_runner(save_path=path)
     practical_2_runner(save_path=path)

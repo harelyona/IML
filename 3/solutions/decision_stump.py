@@ -135,9 +135,3 @@ class DecisionStump(BaseEstimator):
             Performance under missclassification loss function
         """
         return misclassification_error(y_true=y, y_pred=self._predict(X))
-
-ds = DecisionStump()
-values = np.array([1, 2, 3, 4, 5])
-labels = np.array([-1, -1, 1, 1, 1])
-a, b = ds._find_threshold(values, labels, 1)
-print(a, b)

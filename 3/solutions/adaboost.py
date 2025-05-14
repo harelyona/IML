@@ -1,8 +1,8 @@
 
 import numpy as np
-from IMLearn.base import BaseEstimator
+from base_estimator import BaseEstimator
 from typing import Callable, NoReturn
-from IMLearn.metrics import misclassification_error
+from loss_functions import misclassification_error
 
 class AdaBoost(BaseEstimator):
     """

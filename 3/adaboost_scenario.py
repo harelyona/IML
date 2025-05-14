@@ -1,12 +1,16 @@
 import numpy as np
 from typing import Tuple
+
+from matplotlib import pyplot as plt
+
 from utils import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from adaboost import AdaBoost
 from decision_stump import DecisionStump
-
+import plotly.io as pio
+pio.renderers.default = "browser"
 def generate_data(n: int, noise_ratio: float) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generate a dataset in R^2 of specified size
@@ -42,7 +46,20 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     (train_X, train_y), (test_X, test_y) = generate_data(train_size, noise), generate_data(test_size, noise)
 
     # Question 1: Train- and test errors of AdaBoost in noiseless case
-    raise NotImplementedError()
+    model = AdaBoost(DecisionStump, n_learners).fit(train_X, train_y)
+    training_errors = np.zeros(n_learners)
+    test_errors = np.zeros(n_learners)
+    for size in range(1, n_learners + 1):
+        training_errors[size - 1] = model.partial_loss(train_X, train_y, size)
+        test_errors[size - 1] = model.partial_loss(test_X, test_y, size)
+    plt.plot(range(1, n_learners + 1), training_errors, label="Training Error")
+    plt.plot(range(1, n_learners + 1), test_errors, label="Test Error")
+    plt.xlabel("Number of Learners")
+    plt.ylabel("Error")
+    plt.title("Training and Test Errors of AdaBoost")
+    plt.legend()
+    plt.savefig(r"plots/adaboost errors.png")
+    plt.show()
 
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
@@ -58,4 +75,21 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
 if __name__ == '__main__':
     np.random.seed(0)
-    raise NotImplementedError()
+    fit_and_evaluate_adaboost(0,)
+
+
+    # X = np.array([[1, 2], [2, 3], [3, 4]])
+    # y = np.array([1, -1, 1])
+    # model = AdaBoost(DecisionStump, 3)
+    # model.fit(X, y)
+    # surface = decision_surface(
+    #     predict=model.predict,  # prediction function of your classifier
+    #     xrange=(-1, 5),  # x-axis range
+    #     yrange=(-1, 5),  # y-axis range
+    #     density=120,  # number of points to evaluate (higher = smoother but slower)
+    #     dotted=False,  # True for scatter plot, False for contour plot
+    #     colorscale=custom,  # custom color scale defined in utils.py
+    #     showscale=True  # whether to show the color scale bar
+    # )
+    # fig = go.Figure(surface)
+    # fig.show()

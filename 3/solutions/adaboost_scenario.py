@@ -1,12 +1,16 @@
 import numpy as np
 from typing import Tuple
-from IMLearn.metalearners.adaboost import AdaBoost
-from IMLearn.learners.classifiers import DecisionStump
-from utils import *
+
+from matplotlib import pyplot as plt
+
+from adaboost import AdaBoost
+from decision_stump import DecisionStump
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from utils import *
 # import matplotlib.pyplot as plt
-
+import plotly.io as pio
+pio.renderers.default = "browser"
 def generate_data(n: int, noise_ratio: float) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generate a dataset in R^2 of specified size
@@ -46,16 +50,15 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     train_error = [model.partial_loss(train_X, train_y, t) for t in range(1, n_learners + 1)]
     test_error = [model.partial_loss(test_X, test_y, t) for t in range(1, n_learners + 1)]
 
-    fig = go.Figure(
-        data=[go.Scatter(x=list(range(1, n_learners + 1)), y=train_error, name="Train Error", mode="lines"),
-              go.Scatter(x=list(range(1, n_learners + 1)), y=test_error, name="Test Error", mode="lines")],
-        layout=go.Layout(
-            width=500, height=500,
-            title={"x": 0.5, "text": r"$\text{AdaBoost Misclassification As Function Of Number Of Classifiers}$"},
-            xaxis_title=r"$\text{Iteration}$",
-            yaxis_title=r"$\text{Misclassification Error}$"))
-    fig.write_image(f"adaboost_{noise}.png")
-
+    plt.plot(range(1, n_learners + 1), train_error, label="Training Error")
+    plt.plot(range(1, n_learners + 1), test_error, label="Test Error")
+    plt.xlabel("Number of Learners")
+    plt.ylabel("Error")
+    plt.title("Training and Test Errors of AdaBoost")
+    plt.legend()
+    plt.savefig(r"adaboost errors.png")
+    plt.show()
+    return
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
@@ -93,5 +96,6 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
 if __name__ == '__main__':
     np.random.seed(0)
-    for noise in [0, .4]:
-        fit_and_evaluate_adaboost(noise)
+    # for noise in [0, .4]:
+    #     fit_and_evaluate_adaboost(noise)
+    fit_and_evaluate_adaboost(0)

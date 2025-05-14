@@ -63,7 +63,7 @@ class AdaBoost(BaseEstimator):
             model.fit(X, y)
 
             y_pred = model.predict(X)
-            normalized_error = misclassification_error(y, y_pred, self.D_,)
+            normalized_error = misclassification_error(y, y_pred,)
 
             function_weight = 0.5 * np.log(1/normalized_error - 1)
             self.weights_.append(function_weight)
@@ -87,6 +87,7 @@ class AdaBoost(BaseEstimator):
         y_pred = np.zeros(X.shape[0])
         for model, weight in zip(self.models_, self.weights_):
             y_pred += weight * model.predict(X)
+
         return np.sign(y_pred)
 
 
