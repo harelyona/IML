@@ -23,4 +23,3 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: b
     if normalize:
         return misclassifications / len(y_true)
     return misclassifications
-

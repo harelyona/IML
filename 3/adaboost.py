@@ -43,7 +43,7 @@ class AdaBoost(BaseEstimator):
         super().__init__()
         self.wl_ = wl
         self.iterations_ = iterations
-        self.models_, self.weights_, self.D_ = [], [], None
+        self.models_, self.weights_, self.D_ = [], None, None
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -57,19 +57,16 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        self.D_ = np.ones(X.shape[0]) / X.shape[0]
-        for _ in range(self.iterations_):
-            model = self.wl_()
-            model.fit(X, y)
-
+        self.weights_ = np.zeros(self.iterations_)
+        self.D_ = np.ones(len(y), dtype=np.float64) / len(y)
+        for i in range(0, self.iterations_):
+            model = self.wl_().fit(X, y * self.D_)
             y_pred = model.predict(X)
-            normalized_error = misclassification_error(y, y_pred,)
-
-            function_weight = 0.5 * np.log(1/normalized_error - 1)
-            self.weights_.append(function_weight)
-            self.models_.append(model)
-            self.D_ *= np.exp(-function_weight * y * y_pred)
+            sum_of_errors = np.sum(self.D_[y != y_pred])
+            self.weights_[i] = .5 * np.log(1. / sum_of_errors - 1)
+            self.D_ *= np.exp(-y_pred * y * self.weights_[i])
             self.D_ /= np.sum(self.D_)
+            self.models_.append(model)
     def _predict(self, X):
         """
         Predict responses for given samples using fitted estimator over all boosting iterations
