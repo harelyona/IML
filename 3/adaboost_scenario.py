@@ -11,6 +11,16 @@ from adaboost import AdaBoost
 from decision_stump import DecisionStump
 import plotly.io as pio
 pio.renderers.default = "browser"
+
+def plot_decision_surface(predict, xrange, yrange, density=120, dotted=False, colorscale=custom, showscale=True):
+    xrange, yrange = np.linspace(*xrange, density), np.linspace(*yrange, density)
+    xx, yy = np.meshgrid(xrange, yrange)
+    pred = predict(np.c_[xx.ravel(), yy.ravel()])
+
+    if dotted:
+        plt.scatter(x=xx.ravel(), y=yy.ravel(), opacity=1, mode="markers", hoverinfo="skip", showlegend=False)
+    plt.contour(xrange, yrange, pred.reshape(xx.shape))
+
 def generate_data(n: int, noise_ratio: float) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generate a dataset in R^2 of specified size
@@ -64,6 +74,7 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
+
     raise NotImplementedError()
 
     # Question 3: Decision surface of best performing ensemble
@@ -76,8 +87,11 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 if __name__ == '__main__':
     np.random.seed(0)
     fit_and_evaluate_adaboost(0,)
-
-
+    x_range = (-3, 3)
+    y_range = (-3, 3)
+    predict = lambda x: np.sign(np.max(x, axis=1))  # Dummy prediction function
+    plot_decision_surface(predict, x_range, y_range, True)
+    plt.show()
     # X = np.array([[1, 2], [2, 3], [3, 4]])
     # y = np.array([1, -1, 1])
     # model = AdaBoost(DecisionStump, 3)

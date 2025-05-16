@@ -41,11 +41,14 @@ class DecisionStump(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        err = np.inf
+        error = np.inf
         for j, sign in product(range(X.shape[1]), [-1, 1]):
-            thr, thr_err = self._find_threshold(X[:, j], y, sign)
-            if thr_err < err:
-                self.threshold_, self.j_, self.sign_, err = thr, j, sign, thr_err
+            threshold, threshold_error = self._find_threshold(X[:, j], y, sign)
+            if threshold_error < error:
+                self.threshold_ = threshold
+                self.j_ = j
+                self.sign_ = sign
+                error = threshold_error
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -101,15 +104,13 @@ class DecisionStump(BaseEstimator):
         For every tested threshold, values strictly below threshold are predicted as `-sign` whereas values
         which equal to or above the threshold are predicted as `sign`
         """
-        # Sort values such that search of threshold below is in O(nlogn) for n the number of samples
-        # instead of O(n^2)
+        # Sort
         ids = np.argsort(values)
         values, labels = values[ids], labels[ids]
 
-        # Loss for classifying all as `sign` - namely, if threshold is smaller than values[0]
+        signed_labels = np.sign(labels)
         loss = np.sum(np.abs(labels)[np.sign(labels) == sign])
 
-        # Loss of classifying threshold being each of the values given
         loss = np.append(loss, loss - np.cumsum(labels * sign))
 
         id = np.argmin(loss)
