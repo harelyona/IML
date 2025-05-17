@@ -11,15 +11,25 @@ from adaboost import AdaBoost
 from decision_stump import DecisionStump
 import plotly.io as pio
 pio.renderers.default = "browser"
+DECISION_SURFACE_LABEL = "Decision Surface"
+DECISION_SURFACE_COLOR = "black"
+TRUE_LABEL_COLOR = "green"
+FALSE_LABEL_COLOR = "red"
+SCATTER_SIZE = 3
+FIG_SIZE = (10, 10)
 
-def plot_decision_surface(predict, xrange, yrange, density=120, dotted=False, colorscale=custom, showscale=True):
+
+def plot_decision_surface(plot, model: AdaBoost, t, xrange, yrange, density=120, dotted=False):
     xrange, yrange = np.linspace(*xrange, density), np.linspace(*yrange, density)
     xx, yy = np.meshgrid(xrange, yrange)
-    pred = predict(np.c_[xx.ravel(), yy.ravel()])
+    pred = model.partial_predict(np.c_[xx.ravel(), yy.ravel()], t)
+
+    plot.contour(xx, yy, pred.reshape(xx.shape), levels=[0], colors=DECISION_SURFACE_COLOR)
+    plot.plot([], [], color=DECISION_SURFACE_COLOR, label=DECISION_SURFACE_LABEL)
 
     if dotted:
-        plt.scatter(x=xx.ravel(), y=yy.ravel(), opacity=1, mode="markers", hoverinfo="skip", showlegend=False)
-    plt.contour(xrange, yrange, pred.reshape(xx.shape))
+        plot.scatter(x=xx.ravel(), y=yy.ravel(), opacity=1, mode="markers",
+                     hoverinfo="skip", showlegend=False, label=DECISION_SURFACE_LABEL)
 
 def generate_data(n: int, noise_ratio: float) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -68,14 +78,28 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     plt.ylabel("Error")
     plt.title("Training and Test Errors of AdaBoost")
     plt.legend()
-    plt.savefig(r"plots/adaboost errors.png")
-    plt.show()
+    plt.savefig(r"plots/question1.png")
+    plt.clf()
 
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
-
-    raise NotImplementedError()
+    all_samples = np.append(train_X, test_X, axis=0)
+    all_labels = np.append(train_y, test_y, axis=0)
+    cmap = np.where(all_labels == 1, TRUE_LABEL_COLOR, FALSE_LABEL_COLOR)
+    fig, axs = plt.subplots(2, 2, figsize=FIG_SIZE)
+    for i, t in enumerate(T):
+        ax = axs[i // 2][i % 2]
+        ax.scatter(all_samples[:, 0], all_samples[:, 1], c=cmap, s=SCATTER_SIZE, label="Samples")
+        plot_decision_surface(ax, model, t, lims[0], lims[1])
+        loss = model.partial_loss(all_samples, all_labels, t)
+        ax.set_xlabel("x1")
+        ax.set_ylabel("x2")
+        ax.set_title(f"Decision Surface with {t} Learners\n loss: {loss:.3f}")
+        ax.legend()
+    plt.tight_layout()
+    fig.savefig(r"plots/question2.png")
+    fig.clf()
 
     # Question 3: Decision surface of best performing ensemble
     raise NotImplementedError()
@@ -87,23 +111,17 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 if __name__ == '__main__':
     np.random.seed(0)
     fit_and_evaluate_adaboost(0,)
-    x_range = (-3, 3)
-    y_range = (-3, 3)
-    predict = lambda x: np.sign(np.max(x, axis=1))  # Dummy prediction function
-    plot_decision_surface(predict, x_range, y_range, True)
-    plt.show()
-    # X = np.array([[1, 2], [2, 3], [3, 4]])
-    # y = np.array([1, -1, 1])
-    # model = AdaBoost(DecisionStump, 3)
-    # model.fit(X, y)
-    # surface = decision_surface(
-    #     predict=model.predict,  # prediction function of your classifier
-    #     xrange=(-1, 5),  # x-axis range
-    #     yrange=(-1, 5),  # y-axis range
-    #     density=120,  # number of points to evaluate (higher = smoother but slower)
-    #     dotted=False,  # True for scatter plot, False for contour plot
-    #     colorscale=custom,  # custom color scale defined in utils.py
-    #     showscale=True  # whether to show the color scale bar
-    # )
-    # fig = go.Figure(surface)
-    # fig.show()
+    # x_range = (-3, 3)
+    # y_range = (-3, 3)
+    # predict = lambda X: np.where(np.sum(X**2, axis=1) > 1, 1, -1)
+    # x_data = np.linspace(-10, 10, 9999)
+    # y_data = np.linspace(-10, 10, 9999)
+    # xx, yy = np.meshgrid(x_data, y_data)
+    # pred = predict(np.c_[xx.ravel(), yy.ravel()])
+    # plt.scatter(x_data, y_data, label="Data")
+    # plot_decision_surface(predict, x_range, y_range)
+    # plt.xlabel("X-axis")
+    # plt.ylabel("Y-axis")
+    # plt.title("Decision Surface")
+    # plt.legend()
+    # plt.show()

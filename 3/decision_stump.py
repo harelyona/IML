@@ -109,8 +109,8 @@ class DecisionStump(BaseEstimator):
         values, labels = values[ids], labels[ids]
 
         signed_labels = np.sign(labels)
-        loss = np.sum(np.abs(labels)[np.sign(labels) == sign])
-
+        abs_labels = np.abs(labels)
+        loss = np.sum(abs_labels[signed_labels == sign])
         loss = np.append(loss, loss - np.cumsum(labels * sign))
 
         id = np.argmin(loss)
