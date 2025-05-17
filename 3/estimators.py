@@ -8,6 +8,7 @@ from base_estimator import BaseEstimator
 
 class LinearRegression(BaseEstimator):
     def __init__(self):
+        super().__init__()
         self.model = SklearnLR()
 
     def _fit(self, X, y):
@@ -38,6 +39,7 @@ class LinearRegression(BaseEstimator):
 
 class Lasso(BaseEstimator):
     def __init__(self, alpha: float = 1.0, include_intercept: bool = True):
+        super().__init__()
         self.include_intercept_ = include_intercept
         self.model = SklearnLasso(alpha=alpha, fit_intercept=include_intercept, max_iter=10000)
 

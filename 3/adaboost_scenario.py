@@ -18,7 +18,17 @@ FALSE_LABEL_COLOR = "red"
 SCATTER_SIZE = 3
 FIG_SIZE = (10, 10)
 
+def plot_config(plot, title, x_label="x1", y_label="x2", data_labels=True):
+    if plot == plt:
+        plot = plt.gca()  # Get current axes if plt is passed
 
+    plot.set_title(title)
+    plot.set_xlabel(x_label)
+    plot.set_ylabel(y_label)
+    if data_labels:
+        plot.scatter([], [], color=TRUE_LABEL_COLOR, label="True Label")
+        plot.scatter([], [], color=FALSE_LABEL_COLOR, label="False Label")
+    plot.legend()
 def plot_decision_surface(plot, model: AdaBoost, t, xrange, yrange, density=120, dotted=False):
     xrange, yrange = np.linspace(*xrange, density), np.linspace(*yrange, density)
     xx, yy = np.meshgrid(xrange, yrange)
@@ -64,7 +74,7 @@ def generate_data(n: int, noise_ratio: float) -> Tuple[np.ndarray, np.ndarray]:
 
 def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=500):
     (train_X, train_y), (test_X, test_y) = generate_data(train_size, noise), generate_data(test_size, noise)
-
+    save_path = fr"plots/noise_{noise}"
     # Question 1: Train- and test errors of AdaBoost in noiseless case
     model = AdaBoost(DecisionStump, n_learners).fit(train_X, train_y)
     training_errors = np.zeros(n_learners)
@@ -74,11 +84,9 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
         test_errors[size - 1] = model.partial_loss(test_X, test_y, size)
     plt.plot(range(1, n_learners + 1), training_errors, label="Training Error")
     plt.plot(range(1, n_learners + 1), test_errors, label="Test Error")
-    plt.xlabel("Number of Learners")
-    plt.ylabel("Error")
-    plt.title("Training and Test Errors of AdaBoost")
-    plt.legend()
-    plt.savefig(r"plots/question1.png")
+    plot_config(plt, "Training and Test Errors of AdaBoost", "Number of Learners", "Error", False)
+    plt.savefig(rf"{save_path}/question1.png")
+    plt.show()
     plt.clf()
 
     # Question 2: Plotting decision surfaces
@@ -88,40 +96,45 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     all_labels = np.append(train_y, test_y, axis=0)
     cmap = np.where(all_labels == 1, TRUE_LABEL_COLOR, FALSE_LABEL_COLOR)
     fig, axs = plt.subplots(2, 2, figsize=FIG_SIZE)
+    losses = []
     for i, t in enumerate(T):
         ax = axs[i // 2][i % 2]
         ax.scatter(all_samples[:, 0], all_samples[:, 1], c=cmap, s=SCATTER_SIZE, label="Samples")
         plot_decision_surface(ax, model, t, lims[0], lims[1])
         loss = model.partial_loss(all_samples, all_labels, t)
-        ax.set_xlabel("x1")
-        ax.set_ylabel("x2")
-        ax.set_title(f"Decision Surface with {t} Learners\n loss: {loss:.3f}")
-        ax.legend()
+        losses.append(loss)
+        plot_config(ax, f"Decision Surface with {t} Learners\n     loss: {loss:.3f}")
     plt.tight_layout()
-    fig.savefig(r"plots/question2.png")
-    fig.clf()
+    fig.savefig(rf"{save_path}/question2.png")
+    fig.show()
+    plt.clf()
+
 
     # Question 3: Decision surface of best performing ensemble
-    raise NotImplementedError()
+    min_loss = min(losses)
+    min_loss_idx = losses.index(min_loss)
+    best_t = T[min_loss_idx]
+    test_cmap = np.where(test_y == 1, TRUE_LABEL_COLOR, FALSE_LABEL_COLOR)
+    plt.scatter(test_X[:, 0], test_X[:, 1], c=test_cmap, s=SCATTER_SIZE)
+    plot_decision_surface(plt, model, best_t, lims[0], lims[1])
+    accuracy = model.partial_loss(test_X, test_y, best_t)
+    plot_config(plt, f"Decision Surface with {best_t} Learners\n     accuracy: {accuracy:.3f}")
+    plt.savefig(rf"{save_path}/question3.png")
+    plt.show()
+    plt.clf()
 
     # Question 4: Decision surface with weighted samples
-    raise NotImplementedError()
+    plot_decision_surface(plt, model, best_t, lims[0], lims[1])
+    weights = model.D_ * 5 / np.max(model.D_)
+    train_cmap = np.where(train_y == 1, TRUE_LABEL_COLOR, FALSE_LABEL_COLOR)
+    plt.scatter(train_X[:, 0], train_X[:, 1], c=train_cmap, s=weights)
+    plot_config(plt, "Decision Surface with Weighted Samples")
+    plt.savefig(rf"{save_path}/question4.png")
+    plt.show()
+
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     fit_and_evaluate_adaboost(0,)
-    # x_range = (-3, 3)
-    # y_range = (-3, 3)
-    # predict = lambda X: np.where(np.sum(X**2, axis=1) > 1, 1, -1)
-    # x_data = np.linspace(-10, 10, 9999)
-    # y_data = np.linspace(-10, 10, 9999)
-    # xx, yy = np.meshgrid(x_data, y_data)
-    # pred = predict(np.c_[xx.ravel(), yy.ravel()])
-    # plt.scatter(x_data, y_data, label="Data")
-    # plot_decision_surface(predict, x_range, y_range)
-    # plt.xlabel("X-axis")
-    # plt.ylabel("Y-axis")
-    # plt.title("Decision Surface")
-    # plt.legend()
-    # plt.show()
+    fit_and_evaluate_adaboost(0.4)
