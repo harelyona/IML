@@ -20,7 +20,7 @@ FIG_SIZE = (10, 10)
 
 def plot_config(plot, title, x_label="x1", y_label="x2", data_labels=True):
     if plot == plt:
-        plot = plt.gca()  # Get current axes if plt is passed
+        plot = plt.gca()
 
     plot.set_title(title)
     plot.set_xlabel(x_label)

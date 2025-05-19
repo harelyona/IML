@@ -18,12 +18,22 @@ def select_regularization_parameter(n_samples: int = 50, n_evaluations: int = 50
     n_evaluations: int, default = 500
         Number of regularization parameter values to evaluate for each of the algorithms
     """
-    # Question 1 - Load diabetes dataset and split into training and testing portions
-    raise NotImplementedError()
-
+    data = datasets.load_diabetes()
+    X = data.data
+    y = data.target
     # Question 2 - Perform Cross Validation for different values of the regularization parameter for Ridge and
     # Lasso regressions
-    raise NotImplementedError()
+    lasso_train_errors = np.zeros(n_evaluations)
+    lasso_validation_errors = np.zeros(n_evaluations)
+    ridge_train_errors = np.zeros(n_evaluations)
+    ridge_validation_errors = np.zeros(n_evaluations)
+    ridge_regulazations = np.linspace(1, 5, num=n_evaluations, dtype=float)
+    lasso_regulazations = np.linspace(.001, 2, num=n_evaluations, dtype=float)
+    for i in range(n_evaluations):
+        lasso = Lasso(float(lasso_regulazations[i]))
+        ridge = RidgeRegression(float(ridge_regulazations[i]))
+        lasso_train_errors[i], lasso_validation_errors[i] = cross_validate(lasso, X, y)
+        ridge_train_errors[i], ridge_validation_errors[i] = cross_validate(ridge, X, y)
 
     # Question 3 - Compare best Ridge model, best Lasso model and Least Squares model
     raise NotImplementedError()
@@ -31,4 +41,4 @@ def select_regularization_parameter(n_samples: int = 50, n_evaluations: int = 50
 
 if __name__ == '__main__':
     np.random.seed(0)
-    raise NotImplementedError()
+    select_regularization_parameter()
