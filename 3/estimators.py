@@ -33,7 +33,8 @@ class LinearRegression(BaseEstimator):
         loss : float
             Performance under MSE loss function
         """
-        raise NotImplementedError()
+        predictions = self._predict(X)
+        return np.mean(np.square(predictions - y))
 
 
 class Lasso(BaseEstimator):
