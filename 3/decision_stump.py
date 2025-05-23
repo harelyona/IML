@@ -104,17 +104,15 @@ class DecisionStump(BaseEstimator):
         For every tested threshold, values strictly below threshold are predicted as `-sign` whereas values
         which equal to or above the threshold are predicted as `sign`
         """
-        # Sort
         ids = np.argsort(values)
         values, labels = values[ids], labels[ids]
-
         signed_labels = np.sign(labels)
         abs_labels = np.abs(labels)
         loss = np.sum(abs_labels[signed_labels == sign])
         loss = np.append(loss, loss - np.cumsum(labels * sign))
-
         id = np.argmin(loss)
-        return np.concatenate([[-np.inf], values[1:], [np.inf]])[id], loss[id]
+        res = np.concatenate([[-np.inf], values[1:], [np.inf]])[id], loss[id]
+        return float(res[0]), float(res[1])
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
