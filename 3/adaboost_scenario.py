@@ -1,12 +1,5 @@
-import numpy as np
-from typing import Tuple
-
 from matplotlib import pyplot as plt
-
 from utils import *
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
 from adaboost import AdaBoost
 from decision_stump import DecisionStump
 import plotly.io as pio
@@ -18,7 +11,7 @@ FALSE_LABEL_COLOR = "red"
 SCATTER_SIZE = 3
 FIG_SIZE = (10, 10)
 
-def plot_config(plot, title, x_label="x1", y_label="x2", data_labels=True):
+def plot_config(plot, title:str, x_label:str="x1", y_label:str="x2", data_labels:bool=True):
     if plot == plt:
         plot = plt.gca()
 
